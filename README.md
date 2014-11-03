@@ -16,7 +16,7 @@ TODO add a how to register new flags
 TODO
 
 #### NPM Info:
-[![NPM](https://nodei.co/npm/we-plugin-auth.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/we-plugin-flag/)
+[![NPM](https://nodei.co/npm/we-plugin-flag.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/we-plugin-flag/)
 
 ## Copyright and license
 
