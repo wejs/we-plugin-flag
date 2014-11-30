@@ -1,11 +1,10 @@
 {
   "name": "we-plugin-flag",
   "description": "We.js flag plugin",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "dependencies": {
     "include-all": "^0.1.6",
-    "lodash": "^2.4.1",
-    "we-theme-engine": "0.0.10"
+    "lodash": "^2.4.1"
   },
   "main": "lib/index.js",
   "scripts": {
