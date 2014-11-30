@@ -107,8 +107,13 @@ module.exports = {
 
     // check if record exists
     Flag.recordExists(modelName, modelId,function(err, record) {
-      if (err || !record) {
-        sails.log.error('unFollow:Model type id record dont exist.', modelName, modelId);
+      if (err) {
+        sails.log.error('Error on check if model exists to flag', modelName, modelId);
+        return res.serverError(err);
+      }
+
+      if (!record) {
+        sails.log.error('flag:recordExists type id record dont exist.', modelName, modelId);
         return res.forbidden();
       }
 

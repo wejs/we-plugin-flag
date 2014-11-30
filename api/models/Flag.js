@@ -64,17 +64,7 @@ module.exports = {
       return cb('Model type dont exist.');
     }
 
-    if(modelName === 'user') {
-      // user has one external id diferent from db id
-      return sailsModel.findOne({
-        idInProvider: modelId
-      })
-      .exec(cb);
-    }
-
-    sailsModel.findOne({
-      id: modelId
-    })
+    sailsModel.findOneById(modelId)
     .exec(cb);
   }
 }
