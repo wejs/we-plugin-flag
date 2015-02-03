@@ -1,9 +1,9 @@
 {
   "name": "we-plugin-flag",
   "description": "We.js flag plugin",
-  "version": "0.0.5",
+  "version": "0.2.0",
   "dependencies": {
-    "lodash": "^2.4.1"
+    "lodash": "^3.0.1"
   },
   "main": "lib/index.js",
   "scripts": {
@@ -17,7 +17,7 @@
   "publishConfig": {
     "registry": "http://registry.npmjs.org"
   },
-  "author": "Alberto Souza <alberto.souza.dev@gmail.com>",
+  "author": "Alberto Souza <contato@albertosouza.net>",
   "license": "ISC",
   "devDependencies": {
     "mocha": "^1.18.2",
