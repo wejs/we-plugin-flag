@@ -15,13 +15,6 @@ module.exports = function Model(we) {
         type: we.db.Sequelize.STRING,
         allowNull: false
       },
-      /**
-       * flag user id
-       */
-      userId: {
-        type: we.db.Sequelize.BIGINT,
-        allowNull: false
-      },
 
       /**
        * flagged model name ex.: post
@@ -37,6 +30,13 @@ module.exports = function Model(we) {
       modelId: {
         type: we.db.Sequelize.BIGINT,
         allowNull: false
+      }
+    },
+
+    associations: {
+      user:  {
+        type: 'belongsTo',
+        model: 'user'
       }
     },
 
@@ -69,6 +69,29 @@ module.exports = function Model(we) {
           RelatedModel.findById(modelId)
           .then(function(r){ cb(null, r); })
           .catch(cb);
+        },
+
+        getCountAndUserStatus: function(userId, modelName, modelId, flagType, done) {
+          we.db.models.flag.count({
+            where: {
+              model: modelName, modelId: modelId, flagType: flagType
+            }
+          }).then(function (count) {
+            if (!count || !userId) {
+              return done(null, {
+                isFlagged: false,
+                count: count || 0
+              });
+            }
+
+            we.db.models.flag.isFlagged(flagType, userId, modelName, modelId)
+            .then(function (isFlagged) {
+              return done(null, {
+                isFlagged: Boolean(isFlagged),
+                count: count
+              });
+            }).catch(done);
+          }).catch(done);
         }
       }
     }

@@ -1,0 +1,24 @@
+{{#if locals.req.user}}
+  {{#if isFlagged}}
+  <form class="unlike-form" action="/api/v1/unflag/{{modelName}}/{{modelId}}?flagType=like" method="post" onsubmit="we.flag.unlike('{{modelName}}', '{{modelId}}');">
+    <input name="redirectTo" type="hidden" value="{{locals.req.url}}">
+
+    <div class="input-group">
+      <span class="input-group-addon">{{count}}</span>
+      <button class="btn btn-default">{{t 'flag.unlike'}}</button>
+    </div>
+
+  </form>
+  {{else}}
+  <form class="like-form" action="/api/v1/flag/{{modelName}}/{{modelId}}?flagType=like" method="post" onsubmit="we.flag.like('{{modelName}}', '{{modelId}}');">
+    <input name="redirectTo" type="hidden" value="{{locals.req.url}}">
+
+    <div class="input-group">
+      <span class="input-group-addon">{{count}}</span>
+      <button class="btn btn-default">{{t 'flag.like'}}</button>
+    </div>
+  </form>
+  {{/if}}
+{{else}}
+  <span class="label label-default">{{count}} {{t 'flag.like'}}</span>
+{{/if}}

@@ -77,25 +77,36 @@ module.exports = {
 
       // check if is flagged
       we.db.models.flag.isFlagged(flagType ,userId, modelName, modelId)
-      .then(function(flag) {
+      .then(function (flag) {
         // is following
-        if (flag) return res.send({flag: flag});
+        if (flag) {
+          if (res.locals.redirectTo) {
+            return res.redirect(res.locals.redirectTo);
+          } else {
+            return res.send({flag: flag});
+          }
+        }
 
         we.db.models.flag.create({
           flagType: flagType,
           userId: userId,
           model: modelName,
           modelId: modelId
-        })
-        .then(function (salvedFlag) {
-          // send the change to others user connected devices
-          we.io.sockets.in('user_' + userId).emit(
-            'flag:flag', salvedFlag
-          );
+        }).then(function (salvedFlag) {
+          if (we.io) {
+            // send the change to others user connected devices
+            we.io.sockets.in('user_' + userId).emit(
+              'flag:flag', salvedFlag
+            );
+          }
 
-          return res.send({flag: salvedFlag});
-        })
-      })
+          if (res.locals.redirectTo) {
+            return res.redirect(res.locals.redirectTo);
+          } else {
+            return res.send({ flag: salvedFlag });
+          }
+        }).catch(res.queryError);
+      }).catch(res.queryError);
     })
   },
 
@@ -105,7 +116,7 @@ module.exports = {
     var we = req.getWe();
 
     var modelName = req.params.model;
-    var modelId = req.param.modelId;
+    var modelId = req.params.modelId;
     var userId = req.user.id;
     var flagType = req.query.flagType;
 
@@ -122,18 +133,30 @@ module.exports = {
     // check if is following
     we.db.models.flag.isFlagged(flagType, userId, modelName, modelId)
     .then(function isFlaggedCB (flag) {
-      if( !flag ) return res.send();
+      if( !flag ) {
+        if (res.locals.redirectTo) {
+          return res.redirect(res.locals.redirectTo);
+        } else {
+          return res.ok();
+        }
+      }
 
-      we.db.models.flag.destroy({id: flag.id})
-      .then(function () {
+      we.db.models.flag.destroy({
+        where: { id: flag.id }
+      }).then(function () {
+        if (we.io) {
+          // send the change to others user connected devices
+          we.io.sockets.in('user_' + userId).emit('flag:unFlag', flag);
+        }
 
-        // send the change to others user connected devices
-        we.io.sockets.in('user_' + userId).emit('flag:unFlag', flag);
-
-        // send a 200 response on success
-        return res.send();
-      });
-    })
+        // send a 200 response on success or redirectTo if it is set
+        if (res.locals.redirectTo) {
+          return res.redirect(res.locals.redirectTo);
+        } else {
+          return res.ok();
+        }
+      }).catch(res.queryError);
+    }).catch(res.queryError);
   }
 
 };

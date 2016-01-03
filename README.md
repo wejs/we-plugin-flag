@@ -7,7 +7,7 @@
 ## API:
 TODO add a how to register new flags
 
-## Sails.js resources:
+## We.js resources:
 
  - Flag Controller
  - Flag Model

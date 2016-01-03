@@ -56,13 +56,19 @@ module.exports = {
       if (err) return res.serverError(err);
       if (!follow) return res.forbidden();
 
-      // // send the change to others user connected devices
-      // var socketRoomName = 'user_' + userId;
-      // sails.io.sockets.in(socketRoomName).emit(
-      //   'follow:follow', salvedFollow
-      // );
+      if (we.io) {
+        // send the change to others user connected devices
+        var socketRoomName = 'user_' + req.user.id;
+        we.io.sockets.in(socketRoomName).emit(
+          'follow:follow', follow
+        );
+      }
 
-      return res.send({follow: follow})
+      if (res.locals.redirectTo) {
+        return res.redirect(res.locals.redirectTo);
+      } else {
+        return res.send({follow: follow});
+      }
     });
   },
 
@@ -79,8 +85,11 @@ module.exports = {
     .unFollow(req.params.model, req.params.modelId, req.user.id, function(err) {
       if (err) return res.serverError(err);
 
-      return res.status(204).send();
+      if (res.locals.redirectTo) {
+        return res.redirect(res.locals.redirectTo);
+      } else {
+        return res.status(204).send();
+      }
     });
   }
-
 };

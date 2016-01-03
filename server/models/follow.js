@@ -9,14 +9,6 @@ module.exports = function Model(we) {
   var model = {
     definition: {
       /**
-       * creator user id
-       */
-      userId: {
-        type:  we.db.Sequelize.BIGINT,
-        allowNull: false
-      },
-
-      /**
        * model name ex.: post
        */
       model: {
@@ -33,15 +25,22 @@ module.exports = function Model(we) {
       }
     },
 
+    associations: {
+      user:  {
+        type: 'belongsTo',
+        model: 'user'
+      }
+    },
+
     options: {
       classMethods: {
         /**
          * Get query to check if user is following
          *
-         * @return {object} waterline findOne query object
+         * @return {object} sequelize findOne query object
          */
-        isFollowing: function (userId, modelName, modelId){
-          return we.db.models.follow.find({
+        isFollowing: function isFollowing(userId, modelName, modelId){
+          return we.db.models.follow.findOne({
             where: {
               userId: userId,
               model: modelName,
@@ -50,7 +49,7 @@ module.exports = function Model(we) {
           });
         },
 
-        follow: function(modelName, modelId, userId,  cb) {
+        follow: function follow(modelName, modelId, userId,  cb) {
           // check if record exists
           we.db.models.follow.recordExists(modelName, modelId, function (err, record) {
             if (err) return cb(err);
@@ -59,7 +58,6 @@ module.exports = function Model(we) {
             // check if is following
             we.db.models.follow.isFollowing(userId, modelName, modelId)
             .then(function (follow) {
-              if (err) return cb(err);
               if (follow) return cb(null, follow);
 
               we.db.models.follow.create({
@@ -68,8 +66,8 @@ module.exports = function Model(we) {
                 modelId: modelId
               }).then(function (salvedFollow) {
                 return cb(null, salvedFollow);
-              })
-            })
+              }).catch(cb);
+            }).catch(cb);
           })
         },
 
