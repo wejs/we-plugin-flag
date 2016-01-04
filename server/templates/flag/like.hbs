@@ -3,9 +3,9 @@
   <form class="unlike-form" action="/api/v1/unflag/{{modelName}}/{{modelId}}?flagType=like" method="post" onsubmit="we.flag.unlike('{{modelName}}', '{{modelId}}');">
     <input name="redirectTo" type="hidden" value="{{locals.req.url}}">
 
-    <div class="input-group">
+    <div class="input-group input-group-sm">
       <span class="input-group-addon">{{count}}</span>
-      <button class="btn btn-default">{{t 'flag.unlike'}}</button>
+      <button class="btn btn-sm btn-default">{{t 'flag.unlike'}}</button>
     </div>
 
   </form>
@@ -13,9 +13,9 @@
   <form class="like-form" action="/api/v1/flag/{{modelName}}/{{modelId}}?flagType=like" method="post" onsubmit="we.flag.like('{{modelName}}', '{{modelId}}');">
     <input name="redirectTo" type="hidden" value="{{locals.req.url}}">
 
-    <div class="input-group">
+    <div class="input-group input-group-sm">
       <span class="input-group-addon">{{count}}</span>
-      <button class="btn btn-default">{{t 'flag.like'}}</button>
+      <button class="btn btn-sm btn-default">{{t 'flag.like'}}</button>
     </div>
   </form>
   {{/if}}

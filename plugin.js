@@ -146,29 +146,44 @@ module.exports = function loadPlugin(projectPath, Plugin) {
   });
 
   // // set flag and follow fields
-  // plugin.hooks.on('we:models:before:instance', function (we, done) {
-  //   var modelName;
+  plugin.hooks.on('we:models:before:instance', function (we, done) {
+    var modelName;
 
-  //   for (modelName in we.config.flag.models) {
-  //     we.db.modelsConfigs[modelName].definition.isFlagged = {
-  //       type: we.db.Sequelize.VIRTUAL,
-  //       formFieldType: null
-  //     };
-  //     we.db.modelsConfigs[modelName].definition.flagCount = {
-  //       type: we.db.Sequelize.VIRTUAL,
-  //       formFieldType: null
-  //     };
-  //   }
+    // for (modelName in we.config.flag.models) {
+    //   we.db.modelsConfigs[modelName].definition.isFlagged = {
+    //     type: we.db.Sequelize.VIRTUAL,
+    //     formFieldType: null
+    //   };
+    //   we.db.modelsConfigs[modelName].definition.flagCount = {
+    //     type: we.db.Sequelize.VIRTUAL,
+    //     formFieldType: null
+    //   };
+    // }
 
-  //   for (modelName in we.config.follow.models) {
-  //     we.db.modelsConfigs[modelName].definition.isFollowing = {
-  //       type: we.db.Sequelize.VIRTUAL,
-  //       formFieldType: null
-  //     };
-  //   }
+    // for (modelName in we.config.follow.models) {
+    //   we.db.modelsConfigs[modelName].definition.isFollowing = {
+    //     type: we.db.Sequelize.VIRTUAL,
+    //     formFieldType: null
+    //   };
+    // }
 
-  //   done();
-  // });
+    for (modelName in we.config.follow.models) {
+      if (!we.db.modelsConfigs[modelName].associations)
+        we.db.modelsConfigs[modelName].associations = {};
+
+      we.db.modelsConfigs[modelName].associations.follow = {
+        type: 'hasOne',
+        model: 'follow',
+        foreignKey: 'modelId',
+        constraints: false,
+        scope: {
+          modelName: modelName
+        }
+      }
+    }
+
+    done();
+  });
 
   // set sequelize hooks
   plugin.hooks.on('we:models:set:joins', function setFlagHooks(we, done) {
@@ -253,26 +268,42 @@ module.exports = function loadPlugin(projectPath, Plugin) {
     if (req.isAuthenticated() && plugin.modelHaveFollow(req.we, modelName)) {
       if (records) {
         functions.push( function (done) {
-          // load current user following status for records in lists
-          async.each(records, function (record, next) {
-            req.we.db.models.follow.isFollowing(req.user.id, modelName, record.id)
-            .then(function (isFollowing) {
-              if (!record.metadata) record.metadata = {};
-              record.metadata.isFollowing = (isFollowing || false);
-              next();
-            }).catch(next);
-          }, done);
+          var recordIds = records.map(function(r){
+            return r.id;
+          })
+
+          req.we.db.models.follow.findAll({
+            where: {
+              id: recordIds
+            }
+          }).then(function (followings) {
+            followings.forEach(function (f){
+              for (var i = records.length - 1; i >= 0; i--) {
+                if (records[i].id === f.modelId) {
+                  if (!records[i].metadata) records[i].metadata = {};
+                  records[i].metadata.isFollowing = f;
+                  break;
+                }
+              }
+            })
+
+            done();
+          }).catch(done);
         });
 
       } else {
         functions.push( function (done) {
+          if (!record.metadata) record.metadata = {};
+
+          if (record.follow) {
+            record.metadata.isFollowing = record.follow;
+            return done();
+          }
+
           // load current user following status for record
           req.we.db.models.follow.isFollowing(req.user.id, modelName, record.id)
           .then(function (isFollowing) {
-
-            if (!record.metadata) record.metadata = {};
-
-            record.isFollowing = (isFollowing || false);
+            record.metadata.isFollowing = (isFollowing || false);
             done();
           }).catch(done);
         });
