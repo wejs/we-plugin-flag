@@ -195,12 +195,10 @@ module.exports = function loadPlugin(projectPath, Plugin) {
       enableFollow = plugin.modelHaveFollow(we, modelName);
 
       if (enableFollow) {
-        // we.db.models[modelName].addHook('afterFind', 'findFollow', plugin.follow.loadFollowForfindAll);
         we.db.models[modelName].addHook('afterDestroy', 'destroyModelFollows', plugin.follow.destroy);
       }
 
       if (enableFlag) {
-        // we.db.models[modelName].addHook('afterFind', 'findFlags', we.router.alias.afterCreatedRecord);
         we.db.models[modelName].addHook('afterDestroy', 'destroyModelFlags', plugin.flag.destroy);
       }
     }
@@ -224,6 +222,14 @@ module.exports = function loadPlugin(projectPath, Plugin) {
     var records, record;
     var async = data.req.we.utils.async;
     var flag = req.we.db.models.flag;
+    var userId;
+
+    if (req.user) {
+      userId = req.user.id
+    } else {
+      userId = null
+    }
+
 
     if (req.we.utils._.isArray(data.res.locals.data)) {
       records = data.res.locals.data;
@@ -238,7 +244,7 @@ module.exports = function loadPlugin(projectPath, Plugin) {
           async.each(records, function (record, next) {
             if (!record.metadata) record.metadata = {};
 
-           flag.getCountAndUserStatus(req.user.id, modelName, record.id, 'like', function (err, result){
+           flag.getCountAndUserStatus(userId, modelName, record.id, 'like', function (err, result) {
              if (err) return next(err);
 
              record.metadata.isFlagged = result.isFlagged;
@@ -249,11 +255,11 @@ module.exports = function loadPlugin(projectPath, Plugin) {
           }, done);
         });
 
-      } else {
+      } else if (record) {
         functions.push( function (done) {
           if (!record.metadata) record.metadata = {};
 
-          flag.getCountAndUserStatus(req.user.id, modelName, record.id, 'like', function (err, result){
+          flag.getCountAndUserStatus(userId, modelName, record.id, 'like', function (err, result) {
             if (err) return done(err);
 
             record.metadata.isFlagged = result.isFlagged;
@@ -270,7 +276,9 @@ module.exports = function loadPlugin(projectPath, Plugin) {
         functions.push( function (done) {
           var recordIds = records.map(function(r){
             return r.id;
-          })
+          });
+
+          if (data.req.we.utils._.isEmpty(recordIds)) return done();
 
           req.we.db.models.follow.findAll({
             where: {
@@ -291,7 +299,7 @@ module.exports = function loadPlugin(projectPath, Plugin) {
           }).catch(done);
         });
 
-      } else {
+      } else if (record) {
         functions.push( function (done) {
           if (!record.metadata) record.metadata = {};
 
@@ -301,7 +309,7 @@ module.exports = function loadPlugin(projectPath, Plugin) {
           }
 
           // load current user following status for record
-          req.we.db.models.follow.isFollowing(req.user.id, modelName, record.id)
+          req.we.db.models.follow.isFollowing(userId, modelName, record.id)
           .then(function (isFollowing) {
             record.metadata.isFollowing = (isFollowing || false);
             done();
