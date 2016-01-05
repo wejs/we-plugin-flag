@@ -57,7 +57,7 @@ module.exports = function loadPlugin(projectPath, Plugin) {
     'get /api/v1/flag/:model/:modelId([0-9]+)': {
       controller    : 'flag',
       action        : 'getModelFlags',
-      responseType  : 'json',
+      template      : 'flag/getModelFlags',
       permission    : 'use_flag'
     },
     // create
@@ -148,24 +148,6 @@ module.exports = function loadPlugin(projectPath, Plugin) {
   // // set flag and follow fields
   plugin.hooks.on('we:models:before:instance', function (we, done) {
     var modelName;
-
-    // for (modelName in we.config.flag.models) {
-    //   we.db.modelsConfigs[modelName].definition.isFlagged = {
-    //     type: we.db.Sequelize.VIRTUAL,
-    //     formFieldType: null
-    //   };
-    //   we.db.modelsConfigs[modelName].definition.flagCount = {
-    //     type: we.db.Sequelize.VIRTUAL,
-    //     formFieldType: null
-    //   };
-    // }
-
-    // for (modelName in we.config.follow.models) {
-    //   we.db.modelsConfigs[modelName].definition.isFollowing = {
-    //     type: we.db.Sequelize.VIRTUAL,
-    //     formFieldType: null
-    //   };
-    // }
 
     for (modelName in we.config.follow.models) {
       if (!we.db.modelsConfigs[modelName].associations)
@@ -282,7 +264,9 @@ module.exports = function loadPlugin(projectPath, Plugin) {
 
           req.we.db.models.follow.findAll({
             where: {
-              id: recordIds
+              userId: userId,
+              model: modelName,
+              modelId: recordIds
             }
           }).then(function (followings) {
             followings.forEach(function (f){
@@ -336,6 +320,11 @@ module.exports = function loadPlugin(projectPath, Plugin) {
       return false;
     }
   }
+
+  plugin.addJs('we.flag', {
+    type: 'plugin', weight: 20, pluginName: 'we-plugin-flag',
+    path: 'files/public/we.flag.js'
+  });
 
   return plugin;
 };

@@ -1,7 +1,7 @@
 {{#if locals.req.user}}
   {{#if isFlagged}}
-  <form class="unlike-form" action="/api/v1/unflag/{{modelName}}/{{modelId}}?flagType=like" method="post" onsubmit="we.flag.unlike('{{modelName}}', '{{modelId}}');">
-    <input name="redirectTo" type="hidden" value="{{locals.req.url}}">
+  <form class="unlike-form" action="/api/v1/unflag/{{modelName}}/{{modelId}}?flagType=like" method="post" data-we-modelName="{{modelName}}" data-we-modelId="{{modelId}}">
+    <input name="redirectTo" type="hidden" value="{{redirectTo}}">
 
     <div class="input-group input-group-sm">
       <span class="input-group-addon">{{count}}</span>
@@ -10,8 +10,8 @@
 
   </form>
   {{else}}
-  <form class="like-form" action="/api/v1/flag/{{modelName}}/{{modelId}}?flagType=like" method="post" onsubmit="we.flag.like('{{modelName}}', '{{modelId}}');">
-    <input name="redirectTo" type="hidden" value="{{locals.req.url}}">
+  <form class="like-form" action="/api/v1/flag/{{modelName}}/{{modelId}}?flagType=like" method="post" data-we-modelName="{{modelName}}" data-we-modelId="{{modelId}}">
+    <input name="redirectTo" type="hidden" value="{{redirectTo}}">
 
     <div class="input-group input-group-sm">
       <span class="input-group-addon">{{count}}</span>
@@ -20,5 +20,10 @@
   </form>
   {{/if}}
 {{else}}
-  <span class="label label-default">{{count}} {{t 'flag.like'}}</span>
+  <form>
+    <div class="input-group input-group-sm disabled">
+      <span class="input-group-addon">{{count}}</span>
+      <button disabled class="disabled btn btn-sm btn-default">{{t 'flag.like'}}</button>
+    </div>
+  </form>
 {{/if}}

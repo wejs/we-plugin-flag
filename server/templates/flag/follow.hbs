@@ -1,17 +1,14 @@
 {{#if locals.req.user}}
   {{#if isFollowing}}
-  <form class="unfollow-form" action="/api/v1/unfollow/{{modelName}}/{{modelId}}" method="post" onsubmit="we.flag.unfollow('{{modelName}}', '{{modelId}}');">
+  <form class="unfollow-form" action="/api/v1/unfollow/{{modelName}}/{{modelId}}?" method="post" data-we-modelName="{{modelName}}" data-we-modelId="{{modelId}}">
     <input name="redirectTo" type="hidden" value="{{locals.req.url}}">
-
     <div class="input-group">
       <button class="btn btn-sm btn-default">{{t 'flag.unfollow'}}</button>
     </div>
-
   </form>
   {{else}}
-  <form class="follow-form" action="/api/v1/follow/{{modelName}}/{{modelId}}" method="post" onsubmit="we.flag.follow('{{modelName}}', '{{modelId}}');">
+  <form class="follow-form" action="/api/v1/follow/{{modelName}}/{{modelId}}?" method="post"data-we-modelName="{{modelName}}" data-we-modelId="{{modelId}}">
     <input name="redirectTo" type="hidden" value="{{locals.req.url}}">
-
     <div class="input-group">
       <button class="btn btn-sm btn-default">{{t 'flag.follow'}}</button>
     </div>

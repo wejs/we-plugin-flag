@@ -12,32 +12,32 @@ module.exports = {
   /**
    * get Flag status for one content
    */
-  getModelFlags: function getOneFlag(req, res) {
-    var we = req.getWe();
-
-    var query = {};
+  getModelFlags: function getModelFlags(req, res) {
+    var we = req.we;
 
     if (!req.params.model) {
       we.log.warn('Model name not found', req.params.model, req.params.modelId);
       return res.badRequest();
     }
 
-    query.model = req.params.model;
-    if (req.params.modelId) query.modelId = req.params.modelId;
-    if (req.user.id) query.userId = req.user.id;
-    if (req.query.flagType) query.flagType = req.query.flagType;
+    if (!res.locals.template) res.locals.template = 'flag/getModelFlags';
 
-    we.db.models.flag.findAndCountAll({
-      where: query
-    }).then( function (result) {
-      return res.send({
-        flag: result.rows,
-        meta: {
-          count: result.count
-        }
-      });
+    var userId;
 
-    });
+    if (req.user) {
+      userId = req.user.id;
+    } else {
+      userId = null;
+    }
+
+    we.db.models.flag
+    .getCountAndUserStatus(userId, req.params.model, req.params.modelId, req.query.flagType,
+      function (err, result) {
+        if (err) return res.serverError(err);
+
+        res.ok(result);
+      }
+    );
   },
 
   /**
@@ -46,7 +46,7 @@ module.exports = {
   flag: function createFlag(req, res) {
     if (!req.isAuthenticated()) return res.forbidden();
 
-    var we = req.getWe();
+    var we = req.we;
 
     var flagType = req.query.flagType;
     var modelName = req.params.model;
@@ -75,45 +75,77 @@ module.exports = {
         return res.forbidden();
       }
 
-      // check if is flagged
-      we.db.models.flag.isFlagged(flagType ,userId, modelName, modelId)
-      .then(function (flag) {
-        // is following
-        if (flag) {
-          if (res.locals.redirectTo) {
-            return res.redirect(res.locals.redirectTo);
-          } else {
-            return res.send({flag: flag});
-          }
+      we.utils.async.series([
+        function checkIfIsFlagged(done) {
+          // check if is flagged
+          we.db.models.flag.isFlagged(flagType ,userId, modelName, modelId)
+          .then(function (flag) {
+            // is flagged
+            if (flag) res.locals.data = flag;
+
+            done();
+          }).catch(done);
+        },
+        function createFlag(done) {
+          // skip if flag record exists
+          if (res.locals.data) return done();
+
+          we.db.models.flag.create({
+            flagType: flagType,
+            userId: userId,
+            model: modelName,
+            modelId: modelId
+          }).then(function (salvedFlag) {
+            res.locals.data = salvedFlag;
+            res.locals.isCreated = true;
+            done();
+          }).catch(done);
+        },
+        function loadFlagCount(done) {
+          we.db.models.flag.count({
+            where: {
+              model: modelName, modelId: modelId, flagType: flagType
+            }
+          }).then(function (count) {
+            res.locals.metadata.count = count;
+            done();
+          }).catch(done);
+        },
+        function renderTemplate (done) {
+          res.locals.formHtml = we.view.renderTemplate('flag/getModelFlags', res.locals.theme, res.locals);
+          done();
+        }
+      ], function (err){
+        if (err) return res.queryError(err);
+
+        if (res.locals.isCreated && we.io) {
+          // send the change to others user connected devices
+          we.io.sockets.in('user_' + userId).emit(
+            'flag:flag', {
+              flag: res.locals.data,
+              formHtml: res.locals.formHtml,
+              count: res.locals.metadata.count
+            }
+          );
         }
 
-        we.db.models.flag.create({
-          flagType: flagType,
-          userId: userId,
-          model: modelName,
-          modelId: modelId
-        }).then(function (salvedFlag) {
-          if (we.io) {
-            // send the change to others user connected devices
-            we.io.sockets.in('user_' + userId).emit(
-              'flag:flag', salvedFlag
-            );
-          }
-
-          if (res.locals.redirectTo) {
-            return res.redirect(res.locals.redirectTo);
-          } else {
-            return res.send({ flag: salvedFlag });
-          }
-        }).catch(res.queryError);
-      }).catch(res.queryError);
-    })
+        if (res.locals.redirectTo && res.locals.responseType !== 'modal') {
+          return res.redirect(res.locals.redirectTo);
+        } else {
+          return res.send({
+            flag: res.locals.data,
+            formHtml: res.locals.formHtml,
+            count: res.locals.metadata.count
+          });
+        }
+      });
+    });
   },
 
   unFlag: function deleteFlag(req, res) {
     if (!req.isAuthenticated()) return res.forbidden();
 
-    var we = req.getWe();
+    var we = req.we;
 
     var modelName = req.params.model;
     var modelId = req.params.modelId;
@@ -130,33 +162,69 @@ module.exports = {
       return res.badRequest();
     }
 
-    // check if is following
-    we.db.models.flag.isFlagged(flagType, userId, modelName, modelId)
-    .then(function isFlaggedCB (flag) {
-      if( !flag ) {
-        if (res.locals.redirectTo) {
-          return res.redirect(res.locals.redirectTo);
-        } else {
-          return res.ok();
-        }
+    we.utils.async.series([
+      function checkIfIsFlagged(done){
+        // check if is flagged
+        we.db.models.flag.isFlagged(flagType ,userId, modelName, modelId)
+        .then(function (flag) {
+          // is flagged
+          if (flag) res.locals.oldFlag = flag;
+
+          done();
+        }).catch(done);
+      },
+      function destroyFlag(done) {
+        // skip if flag record not exists
+        if (!res.locals.oldFlag) return done();
+
+        we.db.models.flag.destroy({
+          where: { id: res.locals.oldFlag.id }
+        }).then(function () {
+          res.locals.isDestroyed = true;
+          done();
+        }).catch(res.queryError);
+      },
+      function loadFlagCount(done) {
+        we.db.models.flag.count({
+          where: {
+            model: modelName, modelId: modelId, flagType: flagType
+          }
+        }).then(function (count) {
+          res.locals.metadata.count = count;
+          done();
+        }).catch(done);
+      },
+      function renderTemplate (done) {
+        res.locals.formHtml = we.view.renderTemplate('flag/getModelFlags', res.locals.theme, res.locals);
+        done();
+      }
+    ], function (err) {
+      if (err) return res.queryError(err);
+
+      // socket.io pub/sub
+      if (res.locals.isDestroyed && we.io) {
+        // send the change to others user connected devices
+        we.io.sockets.in('user_' + userId).emit(
+          'flag:unFlag', {
+            flag: res.locals.oldFlag,
+            formHtml: res.locals.formHtml,
+            count: res.locals.metadata.count
+          }
+        );
       }
 
-      we.db.models.flag.destroy({
-        where: { id: flag.id }
-      }).then(function () {
-        if (we.io) {
-          // send the change to others user connected devices
-          we.io.sockets.in('user_' + userId).emit('flag:unFlag', flag);
-        }
+      // send the response or re
+      if (res.locals.redirectTo && res.locals.responseType !== 'modal') {
+        return res.redirect(res.locals.redirectTo);
+      } else {
+        return res.send({
+          flag: res.locals.oldFlag,
+          formHtml: res.locals.formHtml,
+          count: res.locals.metadata.count
+        });
+      }
+    });
 
-        // send a 200 response on success or redirectTo if it is set
-        if (res.locals.redirectTo) {
-          return res.redirect(res.locals.redirectTo);
-        } else {
-          return res.ok();
-        }
-      }).catch(res.queryError);
-    }).catch(res.queryError);
   }
 
 };

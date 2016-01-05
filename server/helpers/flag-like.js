@@ -21,11 +21,13 @@ module.exports = function(we) {
     }
 
     return we.view.renderTemplate('flag/like', options.hash.locals.theme, {
+      flagText: 'flag.' + options.hash.locals.req.query.flagType,
       isFlagged: options.hash.isFlagged,
       count: options.hash.count,
       modelId: options.hash.modelId,
       modelName: options.hash.modelName,
-      locals: options.hash.locals
+      locals: options.hash.locals,
+      redirectTo: options.hash.locals.redirectTo || options.hash.locals.req.url
     });
   }
 }

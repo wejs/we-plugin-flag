@@ -1,8 +1,6 @@
 /**
- * FollowController.js
+ * Follow controller
  *
- * @description ::
- * @docs        :: http://sailsjs.org/#!documentation/controllers
  */
 
 module.exports = {
@@ -51,23 +49,42 @@ module.exports = {
       return res.badRequest();
     }
 
-    // check if record exists
-    we.db.models.follow.follow(req.params.model, req.params.modelId, req.user.id, function (err, follow) {
-      if (err) return res.serverError(err);
-      if (!follow) return res.forbidden();
+    we.utils.async.series([
+      function checkIfFollow(done){
+        // follow
+        we.db.models.follow.follow(req.params.model, req.params.modelId, req.user.id, function (err, follow) {
+          if (err) return done(err);
+          if (!follow) return res.forbidden();
 
-      if (we.io) {
+          res.locals.data = follow;
+
+          done();
+        });
+      },
+      function renderTemplate (done) {
+        res.locals.formHtml = we.view.renderTemplate('flag/getModelFollow', res.locals.theme, res.locals);
+        done();
+      }
+    ], function (err) {
+      if (err) return res.queryError(err);
+
+      if (res.locals.data && we.io) {
         // send the change to others user connected devices
-        var socketRoomName = 'user_' + req.user.id;
-        we.io.sockets.in(socketRoomName).emit(
-          'follow:follow', follow
+        we.io.sockets.in('user_' + req.user.id).emit(
+          'follow:follow', {
+            follow: res.locals.data,
+            formHtml: res.locals.formHtml
+          }
         );
       }
 
-      if (res.locals.redirectTo) {
+      if (res.locals.redirectTo && res.locals.responseType !== 'modal') {
         return res.redirect(res.locals.redirectTo);
       } else {
-        return res.send({follow: follow});
+        return res.send({
+          follow: res.locals.data,
+          formHtml: res.locals.formHtml
+        });
       }
     });
   },
@@ -81,14 +98,38 @@ module.exports = {
       return res.badRequest();
     }
 
-    we.db.models.follow
-    .unFollow(req.params.model, req.params.modelId, req.user.id, function(err) {
-      if (err) return res.serverError(err);
+    we.utils.async.series([
+      function unFollow(done){
+        we.db.models.follow
+        .unFollow(req.params.model, req.params.modelId, req.user.id, function (err) {
+          if (err) return res.serverError(err);
+          done();
+        });
+      },
+      function renderTemplate (done) {
+        res.locals.formHtml = we.view.renderTemplate('flag/getModelFollow', res.locals.theme, res.locals);
+        done();
+      }
+    ], function (err) {
+      if (err) return res.queryError(err);
 
-      if (res.locals.redirectTo) {
+      if (res.locals.data && we.io) {
+        // send the change to others user connected devices
+        we.io.sockets.in('user_' + req.user.id).emit(
+          'follow:unFollow', {
+            follow: null,
+            formHtml: res.locals.formHtml
+          }
+        );
+      }
+
+      if (res.locals.redirectTo && res.locals.responseType !== 'modal') {
         return res.redirect(res.locals.redirectTo);
       } else {
-        return res.status(204).send();
+        return res.send({
+          follow: null,
+          formHtml: res.locals.formHtml
+        });
       }
     });
   }
