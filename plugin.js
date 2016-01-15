@@ -159,7 +159,7 @@ module.exports = function loadPlugin(projectPath, Plugin) {
         foreignKey: 'modelId',
         constraints: false,
         scope: {
-          modelName: modelName
+          model: modelName
         }
       }
     }
