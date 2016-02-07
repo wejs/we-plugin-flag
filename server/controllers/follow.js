@@ -4,8 +4,29 @@
  */
 
 module.exports = {
-  _config: {
-    rest: false
+  /**
+   * list authenticated user follows
+   */
+  find: function findAll (req, res) {
+    if (!req.isAuthenticated()) return res.forbidden();
+    // only show current user records
+    res.locals.query.where.userId = req.user.id;
+
+    res.locals.Model.findAndCountAll(res.locals.query)
+    .then(function (record) {
+      res.locals.metadata.count = record.count;
+      // get title field for each follow
+      req.we.utils.async.eachSeries(record.rows, function(r, next){
+        if (!req.we.db.models[r.model]) return next();
+        r.getRelatedRecordTitle(next);
+      },function (err) {
+        if (err) return res.serverError(err);
+
+        res.locals.data = record.rows;
+        return res.ok();
+      });
+
+    }).catch(res.queryError);
   },
 
   /**

@@ -35,6 +35,15 @@ module.exports = function loadPlugin(projectPath, Plugin) {
       permission    : 'use_follow'
     },
 
+    // current user follow list
+    'get /follow': {
+      controller    : 'follow',
+      model         : 'follow',
+      action        : 'find',
+      permission    : 'use_follow',
+      layoutName    : 'fullwidth'
+    },
+
     // create
     // example: /api/v1/follow/post/1
     'post /api/v1/follow/:model/:modelId([0-9]+)': {

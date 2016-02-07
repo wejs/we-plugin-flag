@@ -22,6 +22,14 @@ module.exports = function Model(we) {
       modelId: {
         type: we.db.Sequelize.BIGINT,
         allowNull: false
+      },
+
+      /**
+       * cache for followed record title field
+       * @type {Object}
+       */
+      relatedTitleField: {
+        type: we.db.Sequelize.VIRTUAL
       }
     },
 
@@ -33,6 +41,39 @@ module.exports = function Model(we) {
     },
 
     options: {
+      instanceMethods: {
+
+        getRelatedRecordTitle: function getRelatedRecordTitle(cb) {
+          // related model not found
+          if (!we.db.models[this.model]) return cb();
+          // cache
+          if (this.relatedTitleField) return cb(null, this.relatedTitleField);
+          console.log('>>', we.db.modelsConfigs[this.model].options)
+          var titleField = we.db.models[this.model].options.titleField;
+          if (!titleField) {
+            return cb(null, this.getGenericRelatedRecordTitle());
+          }
+
+          var self = this;
+          we.db.models[this.model].findOne({
+            where: {
+              id: this.modelId
+            },
+            attributes: [titleField]
+          }).then(function (r) {
+            if (!r || !r.get(titleField))
+              return cb(null, self.getGenericRelatedRecordTitle());
+
+            self.relatedTitleField = r.get(titleField);
+            cb(null, self.relatedTitleField);
+          }).catch(cb);
+        },
+
+        getGenericRelatedRecordTitle: function() {
+          // this model dont have a titleField
+          return this.relatedTitleField = this.model +'/'+ this.modelId;
+        }
+      },
       classMethods: {
         /**
          * Get query to check if user is following
