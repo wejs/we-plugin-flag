@@ -2,10 +2,7 @@
 
 [![Dependency Status](https://david-dm.org/wejs/we-plugin-flag.png)](https://david-dm.org/wejs/we-plugin-flag)
 
-> Flag everything!
-
-## API:
-TODO add a how to register new flags
+> Flag or follow everything!
 
 ## We.js resources:
 
