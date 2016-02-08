@@ -9,6 +9,11 @@
     <li role="presentation" class="active"><a href="/follow">
       <span class="glyphicon glyphicon-eye-open"></span> {{t 'notification.follow'}}
     </a></li>
+    {{#if req.we.plugins.we-plugin-notification}}
+    <li role="presentation"><a href="/notification-settings">
+      <span class="glyphicon glyphicon-cog"></span> {{t 'notification.user.settings'}}
+    </a></li>
+    {{/if}}
   </ul>
 
   <br>
@@ -38,7 +43,7 @@
 
     </tbody>
     <tfoot>
-      <td colspan="2">
+      <td colspan="3">
         {{paginate count=metadata.count limit=query.limit currentPage=query.page req=req}}      </td>
     </tfoot>
   </table>

@@ -41,7 +41,9 @@ module.exports = function loadPlugin(projectPath, Plugin) {
       model         : 'follow',
       action        : 'find',
       permission    : 'use_follow',
-      layoutName    : 'fullwidth'
+      layoutName    : 'fullwidth',
+      titleHandler  : 'i18n',
+      titleI18n     : 'notification.follow',
     },
 
     // create

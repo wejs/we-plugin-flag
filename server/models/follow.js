@@ -48,7 +48,7 @@ module.exports = function Model(we) {
           if (!we.db.models[this.model]) return cb();
           // cache
           if (this.relatedTitleField) return cb(null, this.relatedTitleField);
-          console.log('>>', we.db.modelsConfigs[this.model].options)
+
           var titleField = we.db.models[this.model].options.titleField;
           if (!titleField) {
             return cb(null, this.getGenericRelatedRecordTitle());

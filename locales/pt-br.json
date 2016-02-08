@@ -2,5 +2,7 @@
   "flag.like": "Gostar",
   "flag.unlike": "Desgostar",
   "flag.follow": "Seguir",
-  "flag.unfollow": "Não seguir"
+  "flag.unfollow": "Não seguir",
+
+  "notification.follow": "Seguindo"
 }
