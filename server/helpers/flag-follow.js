@@ -2,7 +2,7 @@
  * We {{flag-follow}}  helper
  *
  * usage:
- * {{flag-follow
+ * {{{flag-follow
  *   modelName='post'
  *   modelId=''
  *   isFollowing=record.metadata.isFollowing
