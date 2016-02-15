@@ -175,6 +175,14 @@ module.exports = function loadPlugin(projectPath, Plugin) {
       }
     }
 
+    // user following attr
+    we.db.modelsConfigs.user.associations.following = {
+      type: 'hasOne',
+      model: 'follow',
+      foreignKey: 'userId',
+      constraints: false
+    }
+
     done();
   });
 
