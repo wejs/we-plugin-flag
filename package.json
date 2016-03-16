@@ -1,7 +1,7 @@
 {
   "name": "we-plugin-flag",
   "description": "We.js flag plugin",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "dependencies": {},
   "main": "plugin.js",
   "scripts": {
