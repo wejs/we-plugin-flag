@@ -11,15 +11,15 @@ module.exports = function loadPlugin(projectPath, Plugin) {
         like: {}
       },
       models: {
-        post: true,
-        group: true
+        // post: true,
+        // group: true
       }
     },
     follow: {
       models: {
-        post: true,
-        group: true,
-        user: true
+        // post: true,
+        // group: true,
+        // user: true
       }
     }
   });
@@ -161,6 +161,9 @@ module.exports = function loadPlugin(projectPath, Plugin) {
     var modelName;
 
     for (modelName in we.config.follow.models) {
+      // skip if model = false
+      if (!we.config.follow.models[modelName]) continue;
+
       if (!we.db.modelsConfigs[modelName].associations)
         we.db.modelsConfigs[modelName].associations = {};
 
