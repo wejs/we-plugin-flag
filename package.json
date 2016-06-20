@@ -1,18 +1,13 @@
 {
   "name": "we-plugin-flag",
   "description": "We.js flag plugin",
-  "version": "1.0.5",
-  "dependencies": {},
+  "version": "1.1.0",
   "main": "plugin.js",
   "scripts": {
-    "test": "NODE_ENV=test LOG_LV=info ./node_modules/.bin/mocha test/bootstrap.js test/**/*.test.js",
-    "prepublish": "npm prune"
-  },
-  "publishConfig": {
-    "registry": "http://registry.npmjs.org"
+    "test": "NODE_ENV=test LOG_LV=info ./node_modules/.bin/mocha test/bootstrap.js test/**/*.test.js"
   },
   "author": "Alberto Souza <contato@albertosouza.net>",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "fs-extra": "^0.18.2",
     "mocha": "^2.2.5",
@@ -25,8 +20,9 @@
     "we-theme-admin-default": "^0.3",
     "we-theme-site-wejs": "^0.3"
   },
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:wejs/we-plugin-flag.git"
-  }
+  "repository": "wejs/we-plugin-flag",
+  "keywords": [
+    "wejs-plugin"
+  ],
+  "wejs": {}
 }
