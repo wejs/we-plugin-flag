@@ -67,12 +67,14 @@ module.exports = {
     we.db.models.flag.recordExists(modelName, modelId,function(err, record) {
       if (err) {
         we.log.error('Error on check if model exists to flag', modelName, modelId);
-        return res.serverError(err);
+        res.serverError(err);
+        return null;
       }
 
       if (!record) {
         we.log.error('flag:recordExists type id record dont exist.', modelName, modelId);
-        return res.forbidden();
+        res.forbidden();
+        return null;
       }
 
       we.utils.async.series([
@@ -129,7 +131,8 @@ module.exports = {
           );
         }
 
-        if (res.locals.redirectTo && res.locals.responseType !== 'modal') {
+        if (res.locals.redirectTo && !req.query.contentOnly) {
+          console.log('rodo');
           return res.redirect(res.locals.redirectTo);
         } else {
           return res.send({
@@ -139,6 +142,8 @@ module.exports = {
           });
         }
       });
+
+      return null;
     });
   },
 
@@ -213,8 +218,8 @@ module.exports = {
         );
       }
 
-      // send the response or re
-      if (res.locals.redirectTo && res.locals.responseType !== 'modal') {
+      // send the response or render the component parts
+      if (res.locals.redirectTo && !req.query.contentOnly) {
         return res.redirect(res.locals.redirectTo);
       } else {
         return res.send({

@@ -74,9 +74,12 @@ module.exports = function Model(we) {
         getCountAndUserStatus: function(userId, modelName, modelId, flagType, done) {
           we.db.models.flag.count({
             where: {
-              model: modelName, modelId: modelId, flagType: flagType
+              model: modelName,
+              modelId: modelId,
+              flagType: flagType
             }
-          }).then(function (count) {
+          })
+          .then(function (count) {
             if (!count || !userId) {
               return done(null, {
                 isFlagged: false,

@@ -99,7 +99,7 @@ module.exports = {
         );
       }
 
-      if (res.locals.redirectTo && res.locals.responseType !== 'modal') {
+      if (res.locals.redirectTo && !req.query.contentOnly) {
         return res.redirect(res.locals.redirectTo);
       } else {
         return res.send({
@@ -144,7 +144,7 @@ module.exports = {
         );
       }
 
-      if (res.locals.redirectTo && res.locals.responseType !== 'modal') {
+      if (res.locals.redirectTo && !req.query.contentOnly) {
         return res.redirect(res.locals.redirectTo);
       } else {
         return res.send({
