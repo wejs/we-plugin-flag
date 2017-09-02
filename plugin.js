@@ -3,7 +3,7 @@
  */
 
 module.exports = function loadPlugin(projectPath, Plugin) {
-  var plugin = new Plugin(__dirname);
+  const plugin = new Plugin(__dirname);
   // set plugin configs
   plugin.setConfigs({
     flag: {
@@ -88,26 +88,26 @@ module.exports = function loadPlugin(projectPath, Plugin) {
     }
   });
 
-  plugin.events.on('we:after:load:plugins', function (we) {
+  plugin.events.on('we:after:load:plugins', (we)=> {
     plugin.follow = {
-      loadFollowForfindAll: function(records, opts, done) {
+      loadFollowForfindAll(records, opts, done) {
         if (!records) return done();
 
         if (we.utils._.isArray(records)) {
-          we.utils.async.each(records, function (r, next) {
+          we.utils.async.each(records, (r, next)=> {
             plugin.follow.loadFollowForRecord(r, opts, next);
           }, done);
         } else {
           plugin.follow.loadFollowForRecord(records, opts, done);
         }
       },
-      loadFollowForRecord: function (r, opts, done) {
+      loadFollowForRecord(r, opts, done) {
         done();
       },
-      destroy: function destroyFollow(r, opts, done) {
+      destroy(r, opts, done) {
         if (!r) return done();
 
-        var where;
+        let where;
 
         if (this.name === 'user') {
           where = {
@@ -122,18 +122,21 @@ module.exports = function loadPlugin(projectPath, Plugin) {
 
         we.db.models.follow.destroy({
           where: where
-        }).then(function (result) {
+        })
+        .then( (result)=> {
           we.log.debug('Deleted ' + result + ' follow records from record with id: ' + r.id);
-          return done();
-        }).catch(done);
+          done();
+          return null;
+        })
+        .catch(done);
       }
     };
 
     plugin.flag = {
-      destroy: function destroyFlag(r, opts, done) {
+      destroy(r, opts, done) {
         if (!r) return done();
 
-        var where;
+        let where;
 
         if (this.name === 'user') {
           where = {
@@ -148,17 +151,20 @@ module.exports = function loadPlugin(projectPath, Plugin) {
 
         we.db.models.flag.destroy({
           where: { model: this.name, modelId: r.id }
-        }).then(function (result) {
+        })
+        .then( (result)=> {
           we.log.debug('Deleted ' + result + ' flag records from record with id: ' + r.id);
-          return done();
-        }).catch(done);
+          done();
+          return null;
+        })
+        .catch(done);
       }
     };
   });
 
   // // set flag and follow fields
-  plugin.hooks.on('we:models:before:instance', function (we, done) {
-    var modelName;
+  plugin.hooks.on('we:models:before:instance', (we, done)=> {
+    let modelName;
 
     for (modelName in we.config.follow.models) {
       // skip if model = false
@@ -191,10 +197,10 @@ module.exports = function loadPlugin(projectPath, Plugin) {
 
   // set sequelize hooks
   plugin.hooks.on('we:models:set:joins', function setFlagHooks(we, done) {
-    var models = we.db.models;
-    var enableFlag, enableFollow;
+    const models = we.db.models;
+    let enableFlag, enableFollow;
 
-    for (var modelName in models) {
+    for (let modelName in models) {
       enableFlag = plugin.modelHaveFlag(we, modelName);
       enableFollow = plugin.modelHaveFollow(we, modelName);
 
@@ -211,7 +217,7 @@ module.exports = function loadPlugin(projectPath, Plugin) {
   });
 
   // use this hook in one we.js plugin to change a res.ok response
-  plugin.hooks.on('we:before:send:okResponse', function (data, done) {
+  plugin.hooks.on('we:before:send:okResponse', (data, done)=> {
     // {
     //   req: req,
     //   res: res,
@@ -220,20 +226,18 @@ module.exports = function loadPlugin(projectPath, Plugin) {
 
     if (!data.res.locals.data || !data.res.locals.model) return done();
 
-    var modelName = data.res.locals.model;
-    var functions = [];
-    var req = data.req;
-    var records, record;
-    var async = data.req.we.utils.async;
-    var flag = req.we.db.models.flag;
-    var userId;
+    const modelName = data.res.locals.model;
+    const functions = [];
+    const req = data.req;
+    const async = data.req.we.utils.async;
+    const flag = req.we.db.models.flag;
+    let records, record, userId;
 
     if (req.user) {
       userId = req.user.id
     } else {
       userId = null
     }
-
 
     if (req.we.utils._.isArray(data.res.locals.data)) {
       records = data.res.locals.data;
@@ -243,12 +247,12 @@ module.exports = function loadPlugin(projectPath, Plugin) {
 
     if (plugin.modelHaveFlag(req.we, modelName)) {
       if (records) {
-        functions.push( function (done) {
+        functions.push( (done)=> {
           // load current user flag status for records in lists
-          async.each(records, function (record, next) {
+          async.each(records, (record, next)=> {
             if (!record.metadata) record.metadata = {};
 
-           flag.getCountAndUserStatus(userId, modelName, record.id, 'like', function (err, result) {
+           flag.getCountAndUserStatus(userId, modelName, record.id, 'like', (err, result)=> {
              if (err) return next(err);
 
              record.metadata.isFlagged = result.isFlagged;
@@ -260,10 +264,10 @@ module.exports = function loadPlugin(projectPath, Plugin) {
         });
 
       } else if (record) {
-        functions.push( function (done) {
+        functions.push( (done)=> {
           if (!record.metadata) record.metadata = {};
 
-          flag.getCountAndUserStatus(userId, modelName, record.id, 'like', function (err, result) {
+          flag.getCountAndUserStatus(userId, modelName, record.id, 'like', (err, result)=> {
             if (err) return done(err);
 
             record.metadata.isFlagged = result.isFlagged;
@@ -277,8 +281,8 @@ module.exports = function loadPlugin(projectPath, Plugin) {
 
     if (req.isAuthenticated() && plugin.modelHaveFollow(req.we, modelName)) {
       if (records) {
-        functions.push( function (done) {
-          var recordIds = records.map(function(r){
+        functions.push( (done)=> {
+          let recordIds = records.map( (r)=> {
             return r.id;
           });
 
@@ -290,9 +294,10 @@ module.exports = function loadPlugin(projectPath, Plugin) {
               model: modelName,
               modelId: recordIds
             }
-          }).then(function (followings) {
-            followings.forEach(function (f){
-              for (var i = records.length - 1; i >= 0; i--) {
+          })
+          .then( (followings)=> {
+            followings.forEach( (f)=> {
+              for (let i = records.length - 1; i >= 0; i--) {
                 if (records[i].id === f.modelId) {
                   if (!records[i].metadata) records[i].metadata = {};
                   records[i].metadata.isFollowing = f;
@@ -302,11 +307,13 @@ module.exports = function loadPlugin(projectPath, Plugin) {
             })
 
             done();
-          }).catch(done);
+            return null;
+          })
+          .catch(done);
         });
 
       } else if (record) {
-        functions.push( function (done) {
+        functions.push( (done)=> {
           if (!record.metadata) record.metadata = {};
 
           if (record.follow) {
@@ -316,10 +323,12 @@ module.exports = function loadPlugin(projectPath, Plugin) {
 
           // load current user following status for record
           req.we.db.models.follow.isFollowing(userId, modelName, record.id)
-          .then(function (isFollowing) {
+          .then( (isFollowing)=> {
             record.metadata.isFollowing = (isFollowing || false);
             done();
-          }).catch(done);
+            return null;
+          })
+          .catch(done);
         });
       }
     }

@@ -11,9 +11,9 @@
  * }}}
  */
 
-module.exports = function(we) {
+module.exports = function flagLikeHelper(we) {
   return function helper() {
-    var options = arguments[arguments.length-1];
+    const options = arguments[arguments.length-1];
 
     if (!options.hash.locals) {
       we.log.warn('we-plugin-flag:helper:flag-like: locals, modelId or modelName  attr is required');

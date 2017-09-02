@@ -6,7 +6,7 @@
  */
 
 module.exports = function Model(we) {
-  var model = {
+  const model = {
     definition: {
       /**
        * type
@@ -47,7 +47,7 @@ module.exports = function Model(we) {
          *
          * @return {object} waterline findOne query object
          */
-        isFlagged: function checkIfisFlaggedDB(flagType ,userId, modelName, modelId){
+        isFlagged(flagType ,userId, modelName, modelId){
           return we.db.models.flag.find({
             where: {
               flagType: flagType,
@@ -60,18 +60,21 @@ module.exports = function Model(we) {
         /**
          * Check if one record or model type exists and returns it on callback
          */
-        recordExists: function (modelName, modelId, cb) {
-          var RelatedModel = we.db.models[modelName];
+        recordExists(modelName, modelId, cb) {
+          let RelatedModel = we.db.models[modelName];
           if(!RelatedModel) {
             return cb('Model type dont exist.');
           }
 
           RelatedModel.findById(modelId)
-          .then(function(r){ cb(null, r); })
+          .then( (r)=> {
+            cb(null, r);
+            return null;
+          })
           .catch(cb);
         },
 
-        getCountAndUserStatus: function(userId, modelName, modelId, flagType, done) {
+        getCountAndUserStatus(userId, modelName, modelId, flagType, done) {
           we.db.models.flag.count({
             where: {
               model: modelName,
@@ -79,22 +82,26 @@ module.exports = function Model(we) {
               flagType: flagType
             }
           })
-          .then(function (count) {
+          .then( (count)=> {
             if (!count || !userId) {
-              return done(null, {
+              done(null, {
                 isFlagged: false,
                 count: count || 0
               });
+              return null;
             }
 
-            we.db.models.flag.isFlagged(flagType, userId, modelName, modelId)
-            .then(function (isFlagged) {
-              return done(null, {
+            return we.db.models.flag.isFlagged(flagType, userId, modelName, modelId)
+            .then( (isFlagged)=> {
+              done(null, {
                 isFlagged: Boolean(isFlagged),
                 count: count
               });
-            }).catch(done);
-          }).catch(done);
+              return null;
+            })
+            .catch(done);
+          })
+          .catch(done);
         }
       }
     }

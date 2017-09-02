@@ -18,10 +18,12 @@ we.flag = {
       type: 'POST',
       url: url,
       data: form.serialize()
-    }).then(function (data) {
-      console.log('return>', data);
+    })
+    .then(function (data) {
+      // console.log('return>', data);
       form.replaceWith( data.formHtml );
-    }).fail(function (err){
+    })
+    .fail(function (err){
       // TODO
       console.log('err>',err);
     });

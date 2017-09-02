@@ -12,8 +12,8 @@ module.exports = {
   /**
    * get Flag status for one content
    */
-  getModelFlags: function getModelFlags(req, res) {
-    var we = req.we;
+  getModelFlags(req, res) {
+    const we = req.we;
 
     if (!req.params.model) {
       we.log.warn('Model name not found', req.params.model, req.params.modelId);
@@ -22,7 +22,7 @@ module.exports = {
 
     if (!res.locals.template) res.locals.template = 'flag/getModelFlags';
 
-    var userId;
+    let userId;
 
     if (req.user) {
       userId = req.user.id;
@@ -31,8 +31,7 @@ module.exports = {
     }
 
     we.db.models.flag
-    .getCountAndUserStatus(userId, req.params.model, req.params.modelId, req.query.flagType,
-      function (err, result) {
+    .getCountAndUserStatus(userId, req.params.model, req.params.modelId, req.query.flagType, (err, result)=> {
         if (err) return res.serverError(err);
 
         res.ok(result);
@@ -43,15 +42,14 @@ module.exports = {
   /**
    * create one flag
    */
-  flag: function createFlag(req, res) {
+  flag(req, res) {
     if (!req.isAuthenticated()) return res.forbidden();
 
-    var we = req.we;
-
-    var flagType = req.query.flagType;
-    var modelName = req.params.model;
-    var modelId = req.params.modelId;
-    var userId = req.user.id;
+    const we = req.we;
+    const flagType = req.query.flagType;
+    const modelName = req.params.model;
+    const modelId = req.params.modelId;
+    const userId = req.user.id;
 
     if (!modelName || !modelId) {
       we.log.warn('Model name or modelId not found', modelName, modelId);
@@ -64,7 +62,7 @@ module.exports = {
     }
 
     // check if record exists
-    we.db.models.flag.recordExists(modelName, modelId,function(err, record) {
+    we.db.models.flag.recordExists(modelName, modelId, (err, record)=> {
       if (err) {
         we.log.error('Error on check if model exists to flag', modelName, modelId);
         res.serverError(err);
@@ -81,12 +79,14 @@ module.exports = {
         function checkIfIsFlagged(done) {
           // check if is flagged
           we.db.models.flag.isFlagged(flagType ,userId, modelName, modelId)
-          .then(function (flag) {
+          .then( (flag)=> {
             // is flagged
             if (flag) res.locals.data = flag;
 
             done();
-          }).catch(done);
+            return null;
+          })
+          .catch(done);
         },
         function createFlag(done) {
           // skip if flag record exists
@@ -97,27 +97,33 @@ module.exports = {
             userId: userId,
             model: modelName,
             modelId: modelId
-          }).then(function (salvedFlag) {
+          })
+          .then( (salvedFlag)=> {
             res.locals.data = salvedFlag;
             res.locals.isCreated = true;
             done();
-          }).catch(done);
+            return null;
+          })
+          .catch(done);
         },
         function loadFlagCount(done) {
           we.db.models.flag.count({
             where: {
               model: modelName, modelId: modelId, flagType: flagType
             }
-          }).then(function (count) {
+          })
+          .then( (count)=> {
             res.locals.metadata.count = count;
             done();
-          }).catch(done);
+            return null;
+          })
+          .catch(done);
         },
         function renderTemplate (done) {
           res.locals.formHtml = we.view.renderTemplate('flag/getModelFlags', res.locals.theme, res.locals);
           done();
         }
-      ], function (err){
+      ], (err)=> {
         if (err) return res.queryError(err);
 
         if (res.locals.isCreated && we.io) {
@@ -147,15 +153,14 @@ module.exports = {
     });
   },
 
-  unFlag: function deleteFlag(req, res) {
+  unFlag(req, res) {
     if (!req.isAuthenticated()) return res.forbidden();
 
-    var we = req.we;
-
-    var modelName = req.params.model;
-    var modelId = req.params.modelId;
-    var userId = req.user.id;
-    var flagType = req.query.flagType;
+    const we = req.we;
+    const modelName = req.params.model;
+    const modelId = req.params.modelId;
+    const userId = req.user.id;
+    const flagType = req.query.flagType;
 
     if (!modelName || !modelId) {
       we.log.warn('unFlag:Model name or modelId not found', modelName, modelId);
@@ -171,12 +176,14 @@ module.exports = {
       function checkIfIsFlagged(done){
         // check if is flagged
         we.db.models.flag.isFlagged(flagType ,userId, modelName, modelId)
-        .then(function (flag) {
+        .then( (flag)=> {
           // is flagged
           if (flag) res.locals.oldFlag = flag;
 
           done();
-        }).catch(done);
+          return null;
+        })
+        .catch(done);
       },
       function destroyFlag(done) {
         // skip if flag record not exists
@@ -184,26 +191,32 @@ module.exports = {
 
         we.db.models.flag.destroy({
           where: { id: res.locals.oldFlag.id }
-        }).then(function () {
+        }).
+        then( ()=> {
           res.locals.isDestroyed = true;
           done();
-        }).catch(res.queryError);
+          return null;
+        })
+        .catch(res.queryError);
       },
       function loadFlagCount(done) {
         we.db.models.flag.count({
           where: {
             model: modelName, modelId: modelId, flagType: flagType
           }
-        }).then(function (count) {
+        })
+        .then( (count)=> {
           res.locals.metadata.count = count;
           done();
-        }).catch(done);
+          return null;
+        })
+        .catch(done);
       },
       function renderTemplate (done) {
         res.locals.formHtml = we.view.renderTemplate('flag/getModelFlags', res.locals.theme, res.locals);
         done();
       }
-    ], function (err) {
+    ], (err)=> {
       if (err) return res.queryError(err);
 
       // socket.io pub/sub
