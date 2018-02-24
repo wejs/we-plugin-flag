@@ -104,60 +104,66 @@ module.exports = function loadPlugin(projectPath, Plugin) {
       loadFollowForRecord(r, opts, done) {
         done();
       },
-      destroy(r, opts, done) {
-        if (!r) return done();
+      destroy(r) {
+        return new Promise( (resolve, reject)=> {
+          if (!r) return resolve();
 
-        let where;
+          let where;
 
-        if (this.name === 'user') {
-          where = {
-            $or: [
-              { userId: r.id },
-              { model: this.name, modelId: r.id }
-            ]
-          };
-        } else {
-          where = { model: this.name, modelId: r.id };
-        }
+          if (this.name === 'user') {
+            where = {
+              [we.Op.or]: [
+                { userId: r.id },
+                { model: this.name, modelId: r.id }
+              ]
+            };
+          } else {
+            where = { model: this.name, modelId: r.id };
+          }
 
-        we.db.models.follow.destroy({
-          where: where
-        })
-        .then( (result)=> {
-          we.log.debug('Deleted ' + result + ' follow records from record with id: ' + r.id);
-          done();
-          return null;
-        })
-        .catch(done);
+          we.db.models.follow
+          .destroy({
+            where: where
+          })
+          .then( (result)=> {
+            we.log.debug('Deleted ' + result + ' follow records from record with id: ' + r.id);
+            resolve();
+            return null;
+          })
+          .catch(reject);
+        });
       }
     };
 
     plugin.flag = {
-      destroy(r, opts, done) {
-        if (!r) return done();
+      destroy(r) {
+        return new Promise( (resolve, reject)=> {
+          if (!r) return resolve();
 
-        let where;
+          let where;
 
-        if (this.name === 'user') {
-          where = {
-            $or: [
-              { userId: r.id },
-              { model: this.name, modelId: r.id }
-            ]
-          };
-        } else {
-          where = { model: this.name, modelId: r.id };
-        }
+          if (this.name === 'user') {
+            where = {
+              [we.Op.or]: [
+                { userId: r.id },
+                { model: this.name, modelId: r.id }
+              ]
+            };
+          } else {
+            where = { model: this.name, modelId: r.id };
+          }
 
-        we.db.models.flag.destroy({
-          where: { model: this.name, modelId: r.id }
-        })
-        .then( (result)=> {
-          we.log.debug('Deleted ' + result + ' flag records from record with id: ' + r.id);
-          done();
-          return null;
-        })
-        .catch(done);
+          we.db.models.flag
+          .destroy({
+            where: { model: this.name, modelId: r.id }
+          })
+          .then( (result)=> {
+            we.log.debug('Deleted ' + result + ' flag records from record with id: ' + r.id);
+            resolve();
+            return null;
+          })
+          .catch(reject);
+        });
       }
     };
   });
