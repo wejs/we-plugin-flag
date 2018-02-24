@@ -15,10 +15,10 @@ we i we-plugin-flag
  - Flag Controller
  - Flag Model
 
-
-#### NPM Info:
-[![NPM](https://nodei.co/npm/we-plugin-flag.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/we-plugin-flag/)
-
 ## License
 
 Under [the MIT license](https://github.com/wejs/we/blob/master/LICENSE.md).
+
+## Sponsored by
+
+- Linky Systems: https://linkysystems.com

@@ -7,38 +7,40 @@ module.exports = {
   /**
    * list authenticated user follows
    */
-  find: function findAll (req, res) {
+  find(req, res) {
     if (!req.isAuthenticated()) return res.forbidden();
     // only show current user records
     res.locals.query.where.userId = req.user.id;
 
-    res.locals.Model.findAndCountAll(res.locals.query)
+    res.locals.Model
+    .findAndCountAll(res.locals.query)
     .then(function (record) {
       res.locals.metadata.count = record.count;
       // get title field for each follow
-      req.we.utils.async.eachSeries(record.rows, function(r, next){
+      req.we.utils.async.eachSeries(record.rows, (r, next)=> {
         if (!req.we.db.models[r.model]) return next();
         r.getRelatedRecordTitle(next);
-      },function (err) {
+      }, function (err) {
         if (err) return res.serverError(err);
 
         res.locals.data = record.rows;
         return res.ok();
       });
 
-    }).catch(res.queryError);
+      return null;
+    })
+    .catch(res.queryError);
   },
 
   /**
    * get Follow status for one model
    */
-  isFollowing: function isFollowing(req, res) {
+  isFollowing(req, res) {
     if (!req.isAuthenticated()) return res.forbidden();
-    var we = req.getWe();
+    const we = req.we;
 
-    var query = {};
-
-    var userId = req.user.id;
+    let query = {};
+    let userId = req.user.id;
 
     if (!req.params.model) {
       we.log.warn('Model name not found', req.params.model, req.params.modelId);
@@ -49,21 +51,25 @@ module.exports = {
     if (req.params.modelId) query.modelId = req.params.modelId;
     if (userId) query.userId = userId;
 
-    we.db.models.follow.findAll({
+    we.db.models.follow
+    .findAll({
       where: query
-    }).then( function (records) {
+    })
+    .then( (records)=> {
       res.send({
         follow: records
       });
+
+      return null;
     });
   },
 
   /**
    * Follow something
    */
-  follow: function createFollow(req, res) {
+  follow(req, res) {
     if (!req.isAuthenticated()) return res.forbidden();
-    var we = req.getWe();
+    const we = req.getWe();
 
     if (!req.params.model || !req.params.modelId) {
       we.log.warn('Model name or modelId not found', req.params.model, req.params.modelId);
@@ -71,9 +77,9 @@ module.exports = {
     }
 
     we.utils.async.series([
-      function checkIfFollow(done){
+      function checkIfFollow(done) {
         // follow
-        we.db.models.follow.follow(req.params.model, req.params.modelId, req.user.id, function (err, follow) {
+        we.db.models.follow.follow(req.params.model, req.params.modelId, req.user.id, (err, follow)=> {
           if (err) return done(err);
           if (!follow) return res.forbidden();
 
@@ -110,9 +116,9 @@ module.exports = {
     });
   },
 
-  unFollow: function deleteFollow(req, res) {
+  unFollow(req, res) {
     if (!req.isAuthenticated()) return res.forbidden();
-    var we = req.getWe();
+    const we = req.we;
 
     if (!req.params.model || !req.params.modelId) {
       we.log.warn('unFollow:Model name or modelId not found', req.params.model, req.params.modelId);

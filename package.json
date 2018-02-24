@@ -9,13 +9,18 @@
   "author": "Alberto Souza <contato@albertosouza.net>",
   "license": "MIT",
   "devDependencies": {
+    "express-mysql-session": "^1.2.3",
     "fs-extra": "^4.0.1",
     "mocha": "^3.5.0",
+    "mysql2": "^1.5.2",
     "rimraf": "^2.6.1",
     "supertest": "^3.0.0",
-    "we-core": "^1.12",
-    "we-plugin-file": "^1.4",
+    "we-core": "^2",
+    "we-plugin-acl": "^1.2.11",
+    "we-plugin-auth": "^2",
     "we-plugin-page": "^1.0",
+    "we-plugin-user": "^2",
+    "we-plugin-view": "^1.4.3",
     "we-test-tools": "^0.3",
     "we-theme-admin-default": "^1.0",
     "we-theme-site-wejs": "^0.3"
@@ -24,5 +29,13 @@
   "keywords": [
     "wejs-plugin"
   ],
-  "wejs": {}
+  "wejs": {
+    "plugins": {
+      "we-plugin-user": true,
+      "we-plugin-auth": true,
+      "we-plugin-view": true,
+      "we-plugin-acl": true,
+      "we-plugin-page": true
+    }
+  }
 }

@@ -1,1 +1,7 @@
-{}
+{
+	"response.notFound.title": "response.notFound.title",
+	"response.forbidden.title": "response.forbidden.title",
+	"forbidden": "forbidden",
+	"flag.unfollow": "flag.unfollow",
+	"flag.follow": "flag.follow"
+}

@@ -85,8 +85,9 @@ module.exports = function Model(we) {
          *
          * @return {object} sequelize findOne query object
          */
-        isFollowing(userId, modelName, modelId){
-          return we.db.models.follow.findOne({
+        isFollowing(userId, modelName, modelId) {
+          return we.db.models.follow
+          .findOne({
             where: {
               userId: userId,
               model: modelName,
@@ -97,19 +98,22 @@ module.exports = function Model(we) {
 
         follow(modelName, modelId, userId,  cb) {
           // check if record exists
-          we.db.models.follow.recordExists(modelName, modelId, (err, record)=> {
+          we.db.models.follow
+          .recordExists(modelName, modelId, (err, record)=> {
             if (err) return cb(err);
             if (!record) return cb('record to follow not exists');
 
             // check if is following
-            we.db.models.follow.isFollowing(userId, modelName, modelId)
+            we.db.models.follow
+            .isFollowing(userId, modelName, modelId)
             .then( (follow)=> {
               if (follow) {
                 cb(null, follow);
                 return null;
               }
 
-              we.db.models.follow.create({
+              return we.db.models.follow
+              .create({
                 userId: userId,
                 model: modelName,
                 modelId: modelId
@@ -118,15 +122,18 @@ module.exports = function Model(we) {
                 cb(null, salvedFollow);
                 return null;
               })
-              .catch(cb);
             })
-            .catch(cb);
+            .catch((err)=> {
+              we.log.error(err);
+              cb(err);
+            });
           });
         },
 
         unFollow(modelName, modelId, userId,  cb) {
           // check if is following
-          we.db.models.follow.isFollowing(
+          we.db.models.follow
+          .isFollowing(
             userId, modelName, modelId)
           .then( (follow)=> {
             if (!follow) {
@@ -134,12 +141,14 @@ module.exports = function Model(we) {
               return null;
             }
 
-            return follow.destroy()
+            return follow
+            .destroy()
             .then((r)=> {
               cb(null, r);
               return null;
             });
-          });
+          })
+          .catch(cb)
         },
 
         /**
@@ -149,15 +158,18 @@ module.exports = function Model(we) {
           if (!we.db.models[modelName]) {
             return cb('Model type dont exist.');
           }
-          we.db.models[modelName].findById(modelId)
+          we.db.models[modelName]
+          .findById(modelId)
           .then( (r)=> {
             cb(null, r);
             return null;
-          });
+          })
+          .catch(cb);
         },
 
         getUsersFollowing(modelName, modelId) {
-          return we.db.models.follow.find({
+          return we.db.models.follow
+          .find({
             where: {
               model: modelName,
               modelId: modelId

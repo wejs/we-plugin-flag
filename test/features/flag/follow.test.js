@@ -1,27 +1,29 @@
-var assert = require('assert');
-var request = require('supertest');
-var helpers = require('we-test-tools').helpers;
-var stubs = require('we-test-tools').stubs;
-var _ = require('lodash');
-var http;
-var we;
+const assert = require('assert'),
+  request = require('supertest'),
+  helpers = require('we-test-tools').helpers,
+  stubs = require('we-test-tools').stubs;
+
+let http, we, _;
+let salvedPage, salvedUser, salvedUserPassword;
+let authenticatedRequest;
 
 describe('followFeature', function () {
-  var salvedPage, salvedUser, salvedUserPassword;
-  var authenticatedRequest;
-
   before(function (done) {
     http = helpers.getHttp();
     we = helpers.getWe();
+    _ = we.utils._;
 
-    var userStub = stubs.userStub();
+    let userStub = stubs.userStub();
     helpers.createUser(userStub, function(err, user) {
-      if (err) throw new Error(err);
+      if (err) {
+        we.log.error(err);
+        return done(err);
+      }
 
       salvedUser = user;
       salvedUserPassword = userStub.password;
 
-      var pageStub = stubs.pageStub(user.id);
+      let pageStub = stubs.pageStub(user.id);
       we.db.models.page.create(pageStub)
       .then(function (p) {
         salvedPage = p;
@@ -40,10 +42,11 @@ describe('followFeature', function () {
           if(err) throw err;
           done();
         });
+
+        return null;
       })
     });
   });
-
 
   it('get /api/v1/follow/:model/:modelId? should return empty follow list if user dont are following model', function (done) {
     authenticatedRequest
@@ -74,14 +77,15 @@ describe('followFeature', function () {
     });
   });
 
-  it('delete /api/v1/follow/:model/:modelId should unfollow model', function (done) {
+  it('post /api/v1/unfollow/:model/:modelId should unfollow model', function (done) {
 
     authenticatedRequest
-    .delete('/api/v1/follow/page/' + salvedPage.id)
+    .post('/api/v1/unfollow/page/' + salvedPage.id)
     .set('Accept', 'application/json')
     .end(function (err, res) {
-      assert.equal(204, res.status);
-      assert( _.isEmpty(res.body) );
+      assert.equal(200, res.status);
+
+      assert( _.isEmpty(res.body.follow) );
 
       // check if is following
       we.db.models.follow.isFollowing(
